@@ -9,7 +9,6 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/2637309949/bulrush"
 	"github.com/gin-gonic/gin"
 )
 
@@ -45,8 +44,8 @@ func (upload *Upload) Plugin(router *gin.RouterGroup) {
 		for _, files := range form.File {
 			for _, file := range files {
 				filename := filepath.Base(file.Filename)
-				uuid := bulrush.RandString(32)
-				uuidFileName := bulrush.RandString(32) + string(filename[len(filename)-len(filepath.Ext(filename)):])
+				uuid := RandString(32)
+				uuidFileName := RandString(32) + string(filename[len(filename)-len(filepath.Ext(filename)):])
 				if err := c.SaveUploadedFile(file, path.Join(upload.Path, uuidFileName)); err != nil {
 					c.JSON(http.StatusInternalServerError, gin.H{
 						"message": err.Error(),

@@ -36,8 +36,7 @@ func (upload *Upload) Plugin(router *gin.RouterGroup) {
 		form, err := c.MultipartForm()
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"message": "Internal Server Error",
-				"stack":   err.Error(),
+				"message": err.Error(),
 			})
 		}
 		ret := make([]map[string]interface{}, 0)
@@ -48,8 +47,7 @@ func (upload *Upload) Plugin(router *gin.RouterGroup) {
 				uuidFileName := RandString(32) + string(filename[len(filename)-len(filepath.Ext(filename)):])
 				if err := c.SaveUploadedFile(file, path.Join(upload.Path, uuidFileName)); err != nil {
 					c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-						"message": "Internal Server Error",
-						"stack":   err.Error(),
+						"message": err.Error(),
 					})
 					return
 				}

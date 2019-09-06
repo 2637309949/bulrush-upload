@@ -20,7 +20,7 @@ func (o Option) check(r *Upload) interface{} { return o(r) }
 // SaveOption defined save
 func SaveOption(save func(c *gin.Context, files []FileInfo)) Option {
 	return Option(func(r *Upload) interface{} {
-		r.Save = save
+		r.save = save
 		return r
 	})
 }

@@ -15,14 +15,14 @@ import (
 // Upload file plugin
 type (
 	Upload struct {
-		Path            string
-		PublicURLPrefix string
-		URLPrefix       string
-		Save            func(c *gin.Context, files []FileInfo)
+		Prefix       string
+		AssetsPrefix string
+		UploadPrefix string
+		save         func(c *gin.Context, files []FileInfo)
 	}
 	// FileInfo defined file info
 	FileInfo struct {
-		UID    string
+		UUID   string
 		Status string
 		Name   string
 		Size   int64
@@ -33,9 +33,9 @@ type (
 // New defined return a Upload with default property
 func New() *Upload {
 	up := &Upload{
-		PublicURLPrefix: "/public/upload",
-		URLPrefix:       "/upload",
-		Path:            path.Join("assets/public/upload", ""),
+		Prefix:       "/upload",
+		AssetsPrefix: "/public/upload",
+		UploadPrefix: path.Join("assets/public/upload", ""),
 	}
 	return up
 }
@@ -50,7 +50,7 @@ func (upload *Upload) AddOptions(opts ...Option) *Upload {
 
 // Plugin for bulrush
 func (upload *Upload) Plugin(router *gin.RouterGroup) {
-	router.POST(upload.URLPrefix, func(c *gin.Context) {
+	router.POST(upload.Prefix, func(c *gin.Context) {
 		form, err := c.MultipartForm()
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
@@ -64,25 +64,30 @@ func (upload *Upload) Plugin(router *gin.RouterGroup) {
 				uuid := RandString(32)
 				uuidFileName := RandString(32) + string(filename[len(filename)-len(filepath.Ext(filename)):])
 				size := file.Size
-				if err := c.SaveUploadedFile(file, path.Join(upload.Path, uuidFileName)); err != nil {
-					c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-						"message": err.Error(),
-					})
-					return
-				}
-				item := FileInfo{
-					UID:    uuid,
+				fileInfo := FileInfo{
+					UUID:   uuid,
 					Status: "done",
 					Name:   filename,
 					Size:   size,
-					URL:    upload.PublicURLPrefix + "/" + uuidFileName,
+					URL:    upload.AssetsPrefix + "/" + uuidFileName,
 				}
-				ret = append(ret, item)
+				ret = append(ret, fileInfo)
+				if err := c.SaveUploadedFile(file, path.Join(upload.UploadPrefix, uuidFileName)); err != nil {
+					fileInfo.Status = "error"
+					if upload.save != nil {
+						upload.save(c, ret)
+					}
+					c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+						"message": err.Error(),
+					})
+					// 退出处理
+					return
+				}
 			}
 		}
 		c.JSON(http.StatusOK, ret)
-		if upload.Save != nil {
-			upload.Save(c, ret)
+		if upload.save != nil {
+			upload.save(c, ret)
 		}
 	})
 }

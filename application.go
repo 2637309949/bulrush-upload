@@ -18,7 +18,7 @@ type (
 		Prefix       string
 		AssetsPrefix string
 		UploadPrefix string
-		save         func(c *gin.Context, files []FileInfo)
+		Save         func(c *gin.Context, files []FileInfo)
 	}
 	// FileInfo defined file info
 	FileInfo struct {
@@ -74,20 +74,19 @@ func (upload *Upload) Plugin(router *gin.RouterGroup) {
 				ret = append(ret, fileInfo)
 				if err := c.SaveUploadedFile(file, path.Join(upload.UploadPrefix, uuidFileName)); err != nil {
 					fileInfo.Status = "error"
-					if upload.save != nil {
-						upload.save(c, ret)
+					if upload.Save != nil {
+						upload.Save(c, ret)
 					}
 					c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 						"message": err.Error(),
 					})
-					// 退出处理
 					return
 				}
 			}
 		}
 		c.JSON(http.StatusOK, ret)
-		if upload.save != nil {
-			upload.save(c, ret)
+		if upload.Save != nil {
+			upload.Save(c, ret)
 		}
 	})
 }

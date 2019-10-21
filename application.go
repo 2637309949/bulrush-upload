@@ -40,6 +40,12 @@ func New() *Upload {
 	return up
 }
 
+// Init defined Upload init
+func (upload *Upload) Init(init func(*Upload)) *Upload {
+	init(upload)
+	return upload
+}
+
 // AddOptions defined add option
 func (upload *Upload) AddOptions(opts ...Option) *Upload {
 	for _, v := range opts {
